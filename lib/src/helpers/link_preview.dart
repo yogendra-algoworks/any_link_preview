@@ -210,6 +210,15 @@ class AnyLinkPreview extends StatefulWidget {
           headers: headers ?? {},
         );
       }
+      if (info == null || info.hasData == false) {
+        // if info is null or data is empty try to read url metadata from client side
+        link = link.replaceAll("https", "http");
+        info = await LinkAnalyzer.getInfoClientSide(
+          link,
+          cache: cache,
+          headers: headers ?? {},
+        );
+      }
       return info;
     } catch (error) {
       return null;
@@ -257,6 +266,11 @@ class AnyLinkPreviewState extends State<AnyLinkPreview> {
 
   @override
   void initState() {
+    _loadLink();
+    super.initState();
+  }
+
+  _loadLink(){
     originalLink = widget.link;
     _errorImage = widget.errorImage ??
         'https://github.com/sur950/any_link_preview/blob/master/lib/assets/giphy.gif?raw=true';
@@ -277,7 +291,14 @@ class AnyLinkPreviewState extends State<AnyLinkPreview> {
       _loading = true;
       _getInfo(linkToFetch);
     }
-    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant AnyLinkPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.link != widget.link) {
+      _loadLink();
+    }
   }
 
   Future<void> _getInfo(String link) async {
